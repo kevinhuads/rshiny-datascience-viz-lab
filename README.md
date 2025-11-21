@@ -1,0 +1,224 @@
+# Interactive Data Science Visual Lab in R Shiny
+
+Interactive R Shiny application that illustrates core data science and applied mathematics topics through narrative explanations and interactive visualisations.
+
+The app is organised as an "interactive blog" and covers nine themes: clustering, regression, natural language processing, time series, probability and hypothesis testing, optimisation, epidemiology, Monte Carlo simulation and Markov chains. The emphasis is on intuition, visual storytelling and connections to real datasets.
+
+---
+
+## Live application
+
+The application is deployed on shinyapps.io:
+
+**Live demo:** https://kevinhua.shinyapps.io/DS_viz/
+
+---
+
+## Table of contents
+
+1. [Overview](#overview)  
+2. [Topics covered](#topics-covered)  
+3. [Data sources](#data-sources)  
+4. [Application architecture](#application-architecture)  
+5. [Running the app locally](#running-the-app-locally)  
+6. [Repository structure](#repository-structure)  
+7. [Limitations and future directions](#limitations-and-future-directions)  
+8. [License](#license)
+
+---
+
+## Overview
+
+This project is an R Shiny application created as a data science portfolio and teaching tool. It combines:
+
+- Explanatory text for each topic, written for a technical but non-specialist audience.
+- Interactive visualisations that allow users to explore models, parameters and results.
+- Classical datasets from Kaggle and the UCI Machine Learning Repository, together with simulated examples for probabilistic and stochastic concepts.
+
+The app is positioned as a complement to production grade, Python-based projects that focus on MLOps and deep learning. Here the focus is on classical statistics, machine learning and applied mathematics, showcased through a mature R and Shiny ecosystem.
+
+---
+
+## Topics covered
+
+Each section of the Shiny app corresponds to one of the following themes.
+
+### 1. Clustering: grouping US states by exports
+
+- Dataset: US state exports (in million USD) by product category around 2011.  
+- Goal: group states according to their export profiles rather than geography.  
+- Methods:
+  - Correlation analysis and visual correlation matrix.
+  - Principal Components Analysis (PCA) to reduce 14 export variables to a small number of components.
+  - Clustering on principal components with hierarchical clustering and dendrograms.
+- Visualisations:
+  - Correlation heatmap with several ordering options.
+  - PCA scatterplots for components 1–2, 1–3, 2–3, showing states and variables.
+  - Dendrogram and choropleth map of clusters over the US map.
+
+### 2. Regression: predicting the number of bike rentals
+
+- Dataset: Bike sharing data from the UCI Machine Learning Repository, with hourly counts for 2011–2012.  
+- Goal: predict the number of bike rentals given weather, season, calendar and time-of-day features.  
+- Methods:
+  - Exploratory analysis of the target distribution and daily patterns.
+  - Correlation analysis and feature screening.
+  - Supervised learning using:
+    - Generalised Linear Model (Gamma regression).
+    - K Nearest Neighbours.
+    - Support Vector Regression.
+    - Regression trees.
+    - Random forest.
+    - Gradient boosting trees.
+  - Train/validation/test split with hyperparameter tuning on the validation set.
+  - Evaluation via deviance, error reduction ratio and visual comparison of observed vs predicted.
+
+### 3. Natural Language Processing: analysing hotel reviews
+
+- Dataset: large hotel review dataset with several hundred thousand reviews, ratings and metadata.  
+- Goal: understand how review content relates to ratings and how vocabulary changes across rating levels.  
+- Methods:
+  - Descriptive statistics on review length and rating.
+  - Temporal analysis of average rating by country.
+  - Bag-of-words and n-gram frequency analysis for positive vs negative reviews.
+  - Basic co-occurrence graph and Markov-style transitions between words.
+- Visualisations:
+  - Word clouds and bar charts of most frequent tokens by rating slice.
+  - Network graph of word co-occurrences with multiple layout algorithms.
+  - Time series plots of rating trends.
+
+### 4. Time Series: forecasting item sales
+
+- Dataset: daily item-level sales across several stores over multiple years (Kaggle style "store item demand" dataset).  
+- Goal: forecast daily sales for a specific item and store.  
+- Methods:
+  - Train/test split based on time (for example, train on 2013–2016, test on 2017).
+  - Baseline models such as average and naive forecasts.
+  - Prophet-based models with configurable seasonality and additive vs multiplicative components.
+- Visualisations:
+  - Time series plots of historical and forecasted sales.
+  - Comparison of baseline and Prophet forecasts using MAE and RMSE.
+
+### 5. Probabilities and Statistics: testing if a coin is fair
+
+- Scenario: repeated coin tosses with an unknown bias.  
+- Goal: illustrate the law of large numbers, sampling variability and hypothesis testing.  
+- Methods:
+  - Simulation of Bernoulli trials with user-controlled probability of heads and number of tosses.
+  - Binomial distribution visualisation and p-value computation for different hypotheses.
+  - Illustration of Type I and Type II errors and their trade-off when changing the p-value threshold.
+- Visualisations:
+  - Empirical proportion of heads vs number of tosses.
+  - Probability mass function of the binomial distribution.
+  - Acceptance and rejection regions for hypothesis tests.
+
+### 6. Optimisation: the Travelling Salesman Problem (TSP)
+
+- Scenario: a salesman needs to visit a set of cities once and return to the starting point.  
+- Goal: show the combinatorial explosion of possible routes and the role of heuristic algorithms.  
+- Methods:
+  - Naive random route generation as a baseline.
+  - Greedy heuristics.
+  - Simulated annealing to move from poor routes to near-optimal ones by controlled random perturbations.
+- Visualisations:
+  - Maps of current and best routes.
+  - Progressive improvement of route length through the simulated annealing process.
+
+### 7. Epidemiology: SIRD model for coronavirus dynamics
+
+- Goal: illustrate how simple compartmental models can capture the spread of an infectious disease.  
+- Methods:
+  - SIRD model with compartments for Susceptible, Infectious, Recovered and Deceased.
+  - Parameters controlling contagiousness, recovery duration, mortality, hospital capacity and interventions such as lockdown or vaccination.
+  - Numerical solution of ordinary differential equations.
+- Visualisations:
+  - Time series of compartment sizes.
+  - Effects of changing parameters or introducing interventions on peak load and total deaths.
+
+### 8. Monte Carlo Simulation: approximating π
+
+- Goal: show how random sampling can approximate quantities that have a closed-form but are used as pedagogical examples.  
+- Methods:
+  - Uniform sampling of points in the unit square.
+  - Estimating π via the proportion of points falling inside the quarter circle.
+- Visualisations:
+  - Scatterplot of sampled points coloured by inside/outside.
+  - Convergence of the π estimate as the number of samples increases.
+
+### 9. Markov Chains: simulating words in different languages
+
+- Dataset: large text corpora for several languages (for example from Project Gutenberg).  
+- Goal: demonstrate the Markov property and character-based text generation.  
+- Methods:
+  - Estimation of transition matrices between characters for each language.
+  - Simulation of synthetic "words" based solely on these transitions.
+- Visualisations:
+  - Tables or lists of generated words per language.
+  - Optional representation of transition probabilities.
+
+---
+
+## Data sources
+
+The application relies on a mix of public datasets and simulated data. The main external datasets are:
+
+- **US agricultural exports by state**  
+  Yearly exports per state and product category, originally sourced from a Kaggle dataset referenced in the app.
+
+- **Bike sharing dataset (UCI)**  
+  Hourly bike rental counts from 2011 to 2012 with weather, calendar and time-of-day features, from the UCI Machine Learning Repository.
+
+- **Hotel reviews dataset**  
+  Several hundred thousand hotel reviews with ratings and metadata from a public Kaggle dataset.
+
+- **Store item sales dataset**  
+  Daily item-level sales across multiple stores and years, typical of Kaggle forecasting competitions.
+
+Probabilistic examples (coin tosses, Monte Carlo π) and several optimisation and Markov chain scenarios rely on synthetic data generated inside the application.
+
+---
+
+## Application architecture
+
+At a high level, the Shiny app is structured as follows:
+
+- A main overview page with profile, skills and a timeline of professional experience.
+- A table of contents that links to each topic-specific section.
+- One tab or page per topic, combining:
+  - Explanatory text.
+  - Interactive controls for parameters, model choices and visual options.
+  - Outputs that combine tables and rich plots (correlation maps, PCA plots, time series, network graphs, word clouds, choropleth maps, etc.).
+
+The implementation uses standard Shiny patterns and popular libraries for plotting and interactive components, in particular:
+
+- `shiny`, `shinydashboard` or similar for the layout.
+- `ggplot2`, `plotly`, `highcharter` and related packages for visualisations.
+- `DT` for data tables.
+- `prophet` and `deSolve` for time series and ODE modelling.
+
+If modularisation is used, each topic is implemented as a separate Shiny module under `R/` and assembled in `app.R`.
+
+---
+
+## Running the app locally
+
+### 1. Prerequisites
+
+- R 4.x or newer.
+- Recommended: RStudio for a smoother Shiny development experience.
+
+Install the main R packages used in the app (names to adapt to the actual implementation):
+
+```r
+install.packages(c(
+  "shiny",
+  "shinydashboard",
+  "tidyverse",
+  "DT",
+  "plotly",
+  "highcharter",
+  "prophet",
+  "deSolve",
+  "wordcloud2",
+  "igraph"
+))

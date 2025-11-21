@@ -1,0 +1,40 @@
+Data_Prep/
+Application/Saved
+Performance/
+temp/
+utils/
+Application/deploy.R
+
+# History files
+.Rhistory
+.Rapp.history
+
+# Session data
+.RData
+.Ruserdata
+
+# RStudio project files
+.Rproj.user/
+*.Rproj
+
+# renv cache (optional, can be large)
+renv/library/
+
+# Packrat (if ever used)
+packrat/
+
+# Shiny logs, if any
+shinyapps.log
+rsconnect/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Large derived data and temporary files
+data-raw/**/tmp/
+*.tmp
+*.log
+*.gz
+*.zip
+*.rds
