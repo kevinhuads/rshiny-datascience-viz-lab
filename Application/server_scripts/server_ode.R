@@ -1,3 +1,6 @@
+# ODE section - server outputs and reactives
+
+# First preset SIR simulation with simple intervention and hospital capacity switches
 ode_first = reactive({
   if (input$ode_intervention){
     ep_prob_inf = 0.003
@@ -11,10 +14,12 @@ ode_first = reactive({
                  ep_vr = FALSE,ep_vs = FALSE,peak = FALSE))
 })
 
+# Plot of the first preset SIR scenario
 output$ode_first_plot = renderHighchart({
   ode_first()$plot
 })
 
+# Value box for final death proportion in the first scenario
 output$ode_first_death = renderValueBox({
   valueBox(
     paste(round(ode_first()$deaths/10000,4),"%"),
@@ -25,6 +30,7 @@ output$ode_first_death = renderValueBox({
   )
 })
 
+# Value box for epidemic length in days in the first scenario
 output$ode_first_length = renderValueBox({
   valueBox(
     ode_first()$days, 
@@ -35,6 +41,7 @@ output$ode_first_length = renderValueBox({
   )
 })
 
+# Full SIR simulation driven by user inputs
 ode_final = reactive({
   return(sim_sir(ep_inter = input$ode_int, ep_prob_inf = input$ode_probinf,
                  ep_prob_death = input$ode_probdea, ep_dur = input$ode_dur,
@@ -46,20 +53,12 @@ ode_final = reactive({
                  ep_vd = "Dead"%in%input$ode_display))
 })
 
+# Highchart for the user controlled SIR scenario
 output$ode_highchart = renderHighchart({
   ode_final()$plot
 })
 
-# output$ode_total = renderValueBox({
-#   valueBox(
-#     input$ode_s0 + input$ode_i0 + input$ode_r0 + input$ode_d0, 
-#     'Initial Population', 
-#     icon = icon("users"),
-#     color = "green",
-#     width = 12
-#   )
-# })
-
+# Value box for epidemic length in days for the user scenario
 output$ode_length = renderValueBox({
   valueBox(
     ode_final()$days, 
@@ -70,6 +69,7 @@ output$ode_length = renderValueBox({
   )
 })
 
+# Value box for the day of peak infections
 output$ode_peak = renderValueBox({
   valueBox(
     ode_final()$peak, 
@@ -80,6 +80,7 @@ output$ode_peak = renderValueBox({
   )
 })
 
+# Value box for final death proportion in the user scenario
 output$ode_deaths = renderValueBox({
   valueBox(
     paste(round(ode_final()$deaths/10000,4),"%"), 
@@ -90,26 +91,7 @@ output$ode_deaths = renderValueBox({
   )
 })
 
-# output$ode_parimpact = renderHighchart({
-#   vec_ep_inter = 1:60
-#   test = sapply(vec_ep_inter,function(j) unlist(sim_sir(ep_inter = j)[2:4])) %>%
-#     t() %>%
-#     as.data.frame()
-#   test$ep_inter = vec_ep_inter
-#   
-#   highchart() %>% 
-#     hc_yAxis_multiples(
-#       list(title = list(text = "Days of Infection",style = list(color = ep_cols[2])),
-#            labels = list(style = list(color = ep_cols[2]))),
-#       list(title = list(text = "Deaths",style = list(color = ep_cols[1])),
-#            labels = list(style = list(color = ep_cols[1])),opposite = TRUE)) %>%
-#     hc_chart(type = "line") %>%
-#     hc_xAxis(data = test,title = list(text = "Number of Interactions")) %>%
-#     hc_add_series(name = 'Days of Infection',data = test$days,color = ep_cols[2]) %>%
-#     hc_add_series(name = 'Deaths',data = test$deaths,color = ep_cols[1],yAxis = 1) %>%
-#     hc_tooltip(useHTML= TRUE,table= TRUE,sort= TRUE) 
-# })
-
+# Interactive guided tour for the ODE section using introjs
 observeEvent(input$ode_help,{
   introjs(session, options = list(
     "nextLabel"="Next",

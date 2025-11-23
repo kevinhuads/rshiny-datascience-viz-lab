@@ -1,3 +1,6 @@
+# Markov section - server outputs
+
+# Table of most frequent n-character words per language
 output$markov_table = DT::renderDataTable({
   datatable(markov_top[[paste0("nchar",input$markov_tableind)]], 
             extensions = 'Scroller', options = list(
@@ -10,6 +13,7 @@ output$markov_table = DT::renderDataTable({
             rownames = FALSE)
 })
 
+# Distribution of word lengths across languages
 output$ma_length = renderHighchart({
   mat = sapply(markov_length, '[', 1:max(sapply(markov_length, length)))
   mat = as.data.frame(mat[1:min(24,nrow(mat)),]) 
@@ -34,6 +38,7 @@ output$ma_length = renderHighchart({
     }"))  
 })
 
+# Single-character frequency distribution for a selected language
 output$ma_occur = renderHighchart({
   df = data.frame(markov_gram[[input$ma_occurlang]],stringsAsFactors = FALSE) %>%
     dplyr::rename(name = Var1, y = Freq)  %>% 
@@ -54,6 +59,7 @@ output$ma_occur = renderHighchart({
     }"))  
 })
 
+# Bigram transition probability heatmap for the selected language
 output$ma_heatmap = renderHighchart({
   pat_ = '[a-z]'
   pat_ad = " "
@@ -87,13 +93,14 @@ output$ma_heatmap = renderHighchart({
   
 })
 
+# Generated word table from Markov chain model for selected language and length
 output$ma_gentable = DT::renderDataTable({
   input$ma_gennew
   withProgress(message = 'Calculation in progress',value = 0, {
-   for (i in 1:20) {
-     incProgress(1/20)
-     Sys.sleep(0.025)
-   }
+    for (i in 1:20) {
+      incProgress(1/20)
+      Sys.sleep(0.025)
+    }
   })
   
   x = markov_new[[input$ma_genlang]]

@@ -18,11 +18,11 @@ tab_reg = tabItem(
                   withSpinner(dataTableOutput("bikes_table")))),
         column(12,
           column(6,
-                 highchartOutput('bikes_dist'),
+                 withSpinner(highchartOutput('bikes_dist')),
                  awesomeRadio('bikes_histdist',NULL,choices = c('Histogram','Density'),selected = 'Histogram',inline = TRUE),
                  p('We notice that the outcome follows a distribution Gamma, which is very common for a variable that represents a count over a given time.')),
           column(6,
-                 highchartOutput('bikes_hour'),
+                 withSpinner(highchartOutput('bikes_hour')),
                  prettyCheckbox('bikes_polar', 'Polar Plot',value =FALSE,icon = icon("check"),animation = "rotate",status = 'primary'),
                  p('The average is particularly high at 8am and at 6pm which correspond to the rush hours. 
                         We can also notice that the average is especially low during the night (between 1am and 5am), which is not very surprising.'))
@@ -139,7 +139,7 @@ tab_reg = tabItem(
                             column(5,
                                    p('The table below shows the best performance for both algorithms \\(\\epsilon\\) and \\(\\nu\\) and for each kernel.
                                      The figure on the right shows the gridsearch for each of them'),
-                                   dataTableOutput('bikes_svmdf'),
+                                   withSpinner(dataTableOutput('bikes_svmdf')),
                                    hr(),
                                    p("It seems that, for a given kernel (except the linear one), the type of SVR doesn't change much the performance.
                                      The Radial Kernel is the one which performs the best here with 78.29%. ")
@@ -153,7 +153,7 @@ tab_reg = tabItem(
                                                                                                         'Radial' = 'radial',
                                                                                                         'Sigmoid' = 'sigmoid'))),
                                           column(4,uiOutput('bikes_svm_ui'))),
-                                   column(12,plotlyOutput("bikes_svm"))))
+                                   column(12,withSpinner(plotlyOutput("bikes_svm")))))
                             ),
             tabPanel("Regression Tree",
                      br(),

@@ -1,19 +1,6 @@
-# output$euromap <- renderLeaflet({
-#   pal <- colorNumeric(input$eurocolors, NULL)
-#   
-#   fill_euro = euro[,input$eurochoice]
-#   leaflet(euro_map) %>%
-#     addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-#                 fillColor = ~pal(fill_euro)) %>%
-#     addLegend(pal = pal, values = ~fill_euro, opacity = 1.0, title = input$eurochoice)%>%
-#     addTiles()%>%
-#     addTopoJSON(euro_topo, weight = 1, color = "#444444", fill = FALSE)
-# })
+# Clustering section - server outputs and reactives
 
-#https://github.com/leakyMirror/map-of-europe
-#https://www.destatis.de/Europa/EN/Country/Comparison/GER_EU_Compared.html
-#https://www.europeandataportal.eu/en/dashboard#tab-detailed
-
+# Interactive data table for US exports dataset
 output$usa_table = DT::renderDataTable({
   datatable(usa_df, extensions = 'Scroller', options = list(
     deferRender = TRUE,
@@ -26,12 +13,14 @@ output$usa_table = DT::renderDataTable({
 })
 
 
+# UI for choosing the number of histogram bins
 output$usa_quantnum <- renderUI({
   if (input$usa_quantcol){
     sliderInput('usa_quantnum2', 'Number of Bins', max = 10,min = 2, value = 5, step = 1)
   } 
 })
 
+# Choropleth map of US exports with optional quantile based binning
 output$usamap <- renderLeaflet({
   usa_fill = usa_df[,input$usachoice]
   
@@ -72,7 +61,7 @@ output$usamap <- renderLeaflet({
         style = list("font-weight" = "normal", padding = "3px 8px"),
         textsize = "15px",
         direction = "auto")
-      )  %>%
+    )  %>%
     addProviderTiles(providers$Esri.WorldGrayCanvas, group = "Gray Scale") %>%
     addProviderTiles(providers$Esri.WorldStreetMap, group = 'World Street Map') %>%
     addLayersControl(
@@ -86,14 +75,14 @@ output$usamap <- renderLeaflet({
     )
 })
 
-#http://www.ipl.org/div/stateknow/popchart.html#
-
+# UI for additional corrplot parameter when using hierarchical clustering
 output$usa_corrui = renderUI({
   if (input$usa_corrorder == 'hclust'){
     numericInput('usa_corrrect',label = "Number of Squares",min = 2,max = 8,value = 4)
   }
 })
 
+# Correlation matrix plot for export variables
 output$usa_corr = renderPlot({
   col1 <- colorRampPalette(c("#7F0000", "red", "#FF7F00", "yellow", "#7FFF7F",
                              "cyan", "#007FFF", "blue", "#00007F"))
@@ -102,6 +91,7 @@ output$usa_corr = renderPlot({
            addrect = input$usa_corrrect, number.cex = .8, col = col1(100))
 })
 
+# Scree plot of PCA eigenvalues with threshold visualisation
 output$usa_pca<- renderPlotly({
   shiny::validate(need(
     input$usa_pcanumb,'Loading...'
@@ -144,30 +134,7 @@ output$usa_pca<- renderPlotly({
            showlegend = FALSE)
 })
 
-# highchart() %>% 
-#   hc_chart(polar = FALSE) %>% 
-#   hc_title(text = "Principal Component Analysis Eigenvalues") %>% 
-#   hc_xAxis(categories = usa_eig$Eigenvalues[-1],
-#            tickmarkPlacement = "on",
-#            crosshair = TRUE) %>% 
-#   hc_yAxis(gridLineInterpolation = "polygon") %>% 
-#   hc_series(
-#     list(
-#       name = "Spend",
-#       data = usa_eig$Variance_Explained[-1],
-#       colorByPoint = TRUE,
-#       type = "column",
-#       colors = usa_marker$color[-1]
-#     ),
-#     list(
-#       name = "Budget",
-#       data = diff(usa_eig$Variance_Explained),
-#       type = "line",
-#       color = 'grey'
-#     )
-#   )
-
-
+# Correlation plot of PCA variable cos2 for the selected number of components
 output$usa_corrplot = renderPlot({
   if(input$usa_pcachoice == 'numb'){
     usa_n = input$usa_pcanumb
@@ -179,6 +146,7 @@ output$usa_corrplot = renderPlot({
   corrplot(t(as.matrix(get_pca_var(usa_pca)$cos2))[1:usa_n,])
 })
 
+# UI to choose PCA components either by number or by explained variance
 output$usa_pcachoicenum = renderUI({
   if(input$usa_pcachoice == 'numb'){
     sliderInput('usa_pcanumb','Number of Components',min = 2, max = 10,value = 4, step = 1)
@@ -187,6 +155,7 @@ output$usa_pcachoicenum = renderUI({
   }
 })
 
+# Value box summarising PCA explained variance or required number of components
 output$pca_box <- renderValueBox({
   shiny::validate(need(
     input$usa_pcanumb,'Loading...'
@@ -207,6 +176,7 @@ output$pca_box <- renderValueBox({
   )
 })
 
+# PCA scatter, variable or biplot for US states and export variables
 output$usa_pcaplot <- renderPlot({
   
   if(input$usa_flat1) {
@@ -242,7 +212,7 @@ output$usa_pcaplot <- renderPlot({
   } 
 })
 
-
+# Reactive PCA object used for clustering, with optional square root transformation
 usa_pcadb = reactive({
   if (input$usa_flat2) {
     usa_pca_sqrt
@@ -251,12 +221,14 @@ usa_pcadb = reactive({
   }
 })
 
+# Reactive hierarchical clustering on selected PCA components
 usa_hclust = reactive({
   temp = usa_pcadb()$li[,as.numeric(input$usa_compchoice)] 
   if(length(as.numeric(input$usa_compchoice))==1) names(temp) = rownames(usa_pcadb()$li)
   hclust(dist(temp))
 })
 
+# Dendrogram of hierarchical clustering with coloured branches by cluster
 output$usa_pcahdendr <- renderPlot({
   
   shiny::validate(need(
@@ -277,6 +249,7 @@ output$usa_pcahdendr <- renderPlot({
   usa_dend %>% rect.dendrogram(k=k_groups, border = 8, lty = 5, lwd = 2)
 })
 
+# PCA scatterplot with points coloured by hierarchical cluster
 output$usa_pcahclust <- renderPlot({
   shiny::validate(need(input$usa_pcacomp2,message = 'Loading...'))
   
@@ -300,6 +273,7 @@ output$usa_pcahclust <- renderPlot({
   )
 })
 
+# Conditional UI for choosing PCA axes when on the scatterplot tab
 output$usa_pcacond = renderUI({
   if (input$tab_usa == 'Scatterplot') 
     selectInput('usa_pcacomp2',label = 'Plot Axis',
@@ -308,6 +282,7 @@ output$usa_pcacond = renderUI({
                             'Components 2 and 3' = '2,3'))
 })
 
+# Leaflet map of US states coloured by PCA based cluster
 output$usamap2 <- renderLeaflet({
   shiny::validate(need(
     !is.null(input$usa_compchoice),'Select at least one component'

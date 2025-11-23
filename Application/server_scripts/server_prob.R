@@ -1,3 +1,6 @@
+# Probability and statistics section - server outputs and reactives
+
+# Plot of posterior probability of having chosen the biased coin
 output$coins_throws = renderPlotly({
   p = as.numeric(input$coins_p)
   m = 1/as.numeric(input$coins_m)
@@ -48,6 +51,7 @@ output$coins_throws = renderPlotly({
       xaxis = list(title = "Number of heads in a row",dtick = dtick_))
 })
 
+# One shot simulation of coin tosses and counts of heads and tails
 coins_randVals_1 <- eventReactive(input$coins_simul_1, {
   rand_ = rbinom(n = as.numeric(input$coins_simul_n_1) ,size = 1,prob = as.numeric(input$coins_simul_p_1))
   if (all(rand_ == 0)){
@@ -66,8 +70,7 @@ coins_randVals_1 <- eventReactive(input$coins_simul_1, {
   rand_ = list('head' = heads_,'tail' = tails_)
 },ignoreNULL = FALSE)
 
-
-
+# UI box summarising single simulation results (heads, tails, proportion)
 output$coins_simul_box_1 = renderUI({
   rand_ = coins_randVals_1()
   tails_ = rand_$tail
@@ -81,7 +84,7 @@ output$coins_simul_box_1 = renderUI({
   )
 })
 
-
+# Event based simulation of coin tosses for repeated sampling
 coins_randVals <- eventReactive(input$coins_simul, {
   rand_ = rbinom(n = as.numeric(input$coins_simul_n) ,size = 1,prob = as.numeric(input$coins_simul_p))
   if (all(rand_ == 0)){
@@ -100,6 +103,7 @@ coins_randVals <- eventReactive(input$coins_simul, {
   rand_ = list('head' = heads_,'tail' = tails_)
 },ignoreNULL = FALSE)
 
+# Reactive sample of average number of heads over N experiments
 coins_samp = reactive({
   rand_ = coins_randVals()
   N = as.numeric(input$coins_simul_N)
@@ -115,7 +119,7 @@ coins_samp = reactive({
   })
 })
 
-
+# Shapiro-Wilk test box on the sampling distribution of the average
 output$coins_simul_box = renderUI({
   test_ = shapiro.test(coins_samp()[1:min(length(coins_samp()),5000)])
   if (test_$p.value < 0.05){
@@ -130,12 +134,13 @@ output$coins_simul_box = renderUI({
     color = col_,
     descriptionBlock(header = round(test_$statistic,4) , text = "Statistic W", right_border = FALSE,margin_bottom = TRUE),
     descriptionBlock(header = format.pval(test_$p.value, digits = max(1, getOption("digits") - 2),
-                                                eps = .Machine$double.eps, na.form = "NA") , text = "p-Value", 
+                                          eps = .Machine$double.eps, na.form = "NA") , text = "p-Value", 
                      right_border = FALSE,margin_bottom = TRUE),
     descriptionBlock(header = "Null Hypothesis",text = text_, right_border = FALSE,margin_bottom = TRUE)
   )
 })
 
+# Histogram or QQ plot of the sampling distribution of the average of heads
 output$coins_hist = renderHighchart({
   samp_tab = coins_samp()
   if (input$coins_simul_plot == 'bar'){
@@ -153,6 +158,7 @@ output$coins_hist = renderHighchart({
   }
 })
 
+# Event based simulation of coin tosses for tail test example
 coins_randVals_2 <- eventReactive(c(input$coins_tail_simul, input$coins_tail_n) , {
   rand_ = rbinom(n = as.numeric(input$coins_tail_n) ,size = 1,prob = as.numeric(input$coins_tail_p))
   if (all(rand_ == 0)){
@@ -171,35 +177,7 @@ coins_randVals_2 <- eventReactive(c(input$coins_tail_simul, input$coins_tail_n) 
   rand_ = list('head' = heads_,'tail' = tails_)
 },ignoreNULL = FALSE)
 
-# output$coins_tail_box = renderUI({
-#   x = 0.1
-#   
-#   if (x < 0.05){
-#     col_ = "red" 
-#     text_ = "Rejected"
-#   } else {
-#     col_ = "blue"
-#     text_ = "Can not be rejected"
-#   }
-#   
-#   rand_ = coins_randVals_2()
-#   tails_ = rand_$tail
-#   heads_ = rand_$head
-#   
-#   N = as.numeric(input$coins_tail_n)
-#   x = 0:N
-#   y = choose(N,x)*(0.5^N)
-#   
-#   boxPad(
-#     color = "blue",
-#     descriptionBlock(header = heads_ , text = "Heads", right_border = FALSE,margin_bottom = TRUE),
-#     descriptionBlock(header = format.pval(sum(y[heads_:length(y)]), digits = max(1, getOption("digits") - 2),
-#                                           eps = .Machine$double.eps, na.form = "NA"),text = "p-Value", 
-#                      right_border = FALSE,margin_bottom = TRUE)
-#   )
-#   
-# })
-
+# Binomial distribution and p-value visualisation for one or two tailed tests
 output$coins_tail = renderHighchart({
   N = as.numeric(input$coins_tail_n)
   x = 0:N
@@ -213,7 +191,7 @@ output$coins_tail = renderHighchart({
   m1 = N+1 - m2
   df = df[m1:m2,]
   p_val = as.numeric(input$coins_tail_threshold)
-
+  
   
   col_ = 'rgba(192,192,192,0.35)'
   if (input$coins_tail_test == 'One tail'){
@@ -245,7 +223,7 @@ output$coins_tail = renderHighchart({
     )
 })
 
-
+# Trade off plot between p-value threshold and false negatives for different sample sizes
 output$coins_prob = renderHighchart({
   hchart(as_tibble(coins_prob[[paste0('N',input$coins_prob_n)]]), "line", hcaes(x = 100*prob, y = 100*negative, group = p_value),
          color = brewer.pal(n = 7, name = "Spectral")) %>%
@@ -253,4 +231,3 @@ output$coins_prob = renderHighchart({
     hc_xAxis(title = "Probability",labels = list(formatter =  JS("function () {return this.value + '%';}")))  %>%
     hc_tooltip(useHTML= TRUE,table= TRUE,sort= TRUE)
 })
-

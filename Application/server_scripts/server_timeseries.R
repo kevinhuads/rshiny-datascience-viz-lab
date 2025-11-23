@@ -1,3 +1,6 @@
+# Time series section - server outputs and reactives
+
+# Interactive data table for full sales training dataset
 output$sales_table = DT::renderDataTable({
   datatable(sales_train, extensions = 'Scroller', options = list(
     deferRender = TRUE,
@@ -9,12 +12,14 @@ output$sales_table = DT::renderDataTable({
   rownames = FALSE)
 })
 
+# Reactive subset of sales for the selected store and item
 sales_db = reactive({
   x1 = input$sales_ts_store
   x2 = input$sales_ts_item
   db = sales_train[(sales_train$store ==x1)&(sales_train$item ==x2),c('date','sales')]
 })
 
+# Reactive selection of Highcharter theme based on user input
 sales_themout = reactive({
   if (input$sales_them == 'Elementary') y = hc_theme_elementary()
   if (input$sales_them == 'Dota Buff') y = hc_theme_db()
@@ -25,11 +30,13 @@ sales_themout = reactive({
   return(y)
 })
 
+# Reactive full name for the chosen error metric
 sales_text_reac = reactive({
   if(input$sales_metric == 'MAE') text = 'Mean Absolute Error' else text = 'Root Mean Square Error'
   return(text)
 })
 
+# Time series plot of sales for selected store and item
 output$sales_timeseries = renderHighchart({
   db = sales_db()
   sales_them_const <<- sales_themout()
@@ -39,11 +46,13 @@ output$sales_timeseries = renderHighchart({
     hc_add_theme(sales_them_const)
 })
 
+# Training subset up to end of 2016 for baseline and Prophet models
 sales_dbtrain = reactive({
   db = sales_db()
   db = db[db$date<"2017-01-01",]
 })
 
+# Reactive Prophet model object for current store, item and seasonality configuration
 sales_prophet_reac = reactive({
   ind_item = which((sales_itemgrid$item_list == input$sales_ts_item)&
                      (sales_itemgrid$store_list == input$sales_ts_store))
@@ -55,6 +64,7 @@ sales_prophet_reac = reactive({
   return(sales_prophet[[ind_item]][[ind_proph]])
 })
 
+# Prophet predictions and residuals on the 2017 test period
 output$sales_prophpred = renderHighchart({
   sales_them_const <<- sales_themout()
   pred = sales_db()
@@ -63,9 +73,8 @@ output$sales_prophpred = renderHighchart({
   pred$resid = pred$sales - pred$pred
   
   highchart(type = "stock") %>% 
-    # create axis :)
     hc_yAxis_multiples(
-      create_yaxis(2, height = c(4, 1), turnopposite = TRUE)
+      create_axis(n = 2, height = c(4, 1), turnopposite = TRUE)
     ) %>% 
     hc_add_series(xts::xts(pred$sales,yAxis = 0, order.by=as.Date(pred$date)), id = "sales",name = 'True Sales') %>% 
     hc_add_series(xts::xts(pred$pred ,yAxis = 0, order.by=as.Date(pred$date)), id = "sales",name = 'Predictions')%>% 
@@ -73,6 +82,7 @@ output$sales_prophpred = renderHighchart({
     hc_add_theme(sales_them_const)
 })
 
+# Error value box for the mean benchmark model
 output$sales_mean = renderValueBox({
   pred = sales_db()
   y = mean(pred$sales[pred$date<="2016-12-31"])
@@ -82,6 +92,7 @@ output$sales_mean = renderValueBox({
   valueBox(round(z,2),'Error for the Mean model',icon = icon('list'),color = 'blue')
 })
 
+# Error value box for the naive benchmark model
 output$sales_naive = renderValueBox({
   pred = sales_db()
   y = pred$sales[pred$date=="2016-12-31"]
@@ -91,6 +102,7 @@ output$sales_naive = renderValueBox({
   valueBox(round(z,2),'Error for the Naive model',icon = icon('list'),color = 'black')
 })
 
+# Trend component plot from the Prophet model
 output$sales_prophtrend = renderHighchart({
   sales_them_const <<- sales_themout()
   trend = data.frame(ds = sales_db()$date,trend = sales_prophet_reac()$trend$trend)
@@ -103,79 +115,113 @@ output$sales_prophtrend = renderHighchart({
     hc_add_theme(sales_them_const)
 })
 
+# Conditional UI for yearly seasonality plot
 output$sales_prophyearui = renderUI({
   if (input$sales_proph_year != 'None') highchartOutput('sales_prophyear', height = "250px")
 })
 
+# Conditional UI for monthly seasonality plot
 output$sales_prophmonthui = renderUI({
   if (input$sales_proph_month != 'None') highchartOutput('sales_prophmonth', height = "250px")
 })
 
+# Conditional UI for weekly seasonality plot
 output$sales_prophweekui = renderUI({
   if (input$sales_proph_week != 'None') highchartOutput('sales_prophweek', height = "250px")
 })
 
+# Yearly seasonality component plot from Prophet
 output$sales_prophyear = renderHighchart({
-  sales_them_const <<- sales_themout()
-  year = sales_prophet_reac()$year
-  year$month = month.abb[month(as.Date("2014-12-31") +year$day)]
+  # Do nothing when yearly seasonality is "None"
+  req(input$sales_proph_year != "None")
   
-  if (input$sales_proph_year == 'Multiplicative'){
-    highchart() %>% 
-      hc_title(text = "Yearly Seasonality") %>% 
-      hc_xAxis(categories = year$month,tickInterval = 32) %>% 
+  sales_them_const <<- sales_themout()
+  year <- sales_prophet_reac()$year
+  year$month <- month.abb[month(as.Date("2014-12-31") + year$day)]
+  
+  hc <- highchart() %>% 
+    hc_title(text = "Yearly Seasonality")  %>% 
+    hc_xAxis(categories = year$month, tickInterval = 32)
+  
+  if (input$sales_proph_year == "Multiplicative") {
+    hc %>% 
       hc_yAxis(labels = list(format = "{value}%")) %>% 
-      hc_add_series(100*year$value,showInLegend = FALSE) %>% 
+      hc_add_series(
+        data = 100 * year$value,
+        showInLegend = FALSE
+      ) %>% 
       hc_add_theme(sales_them_const)
-  } else {
-    highchart() %>% 
-      hc_title(text = "Yearly Seasonality")  %>% 
-      hc_xAxis(categories = year$month,tickInterval = 32) %>% 
-      hc_add_series(year$value,showInLegend = FALSE) %>% 
+  } else if (input$sales_proph_year == "Additive") {
+    hc %>% 
+      hc_add_series(
+        data = year$value,
+        showInLegend = FALSE
+      ) %>% 
       hc_add_theme(sales_them_const)
   }
 })
 
+# Monthly seasonality component plot from Prophet
 output$sales_prophmonth = renderHighchart({
-  sales_them_const <<- sales_themout()
-  month = sales_prophet_reac()$month
+  # Do nothing when monthly seasonality is "None"
+  req(input$sales_proph_month != "None")
   
-  if (input$sales_proph_month == 'Multiplicative'){
-    highchart() %>% 
-      hc_title(text = "Monthly Seasonality")  %>% 
-      hc_xAxis(categories = month$day) %>% 
-      hc_yAxis(labels = list(format = "{value}%")) %>% 
-      hc_add_series(100*month$value,showInLegend = FALSE) %>% 
-      hc_add_theme(sales_them_const)
-  } else {
-    highchart() %>% 
-      hc_title(text = "Monthly Seasonality")  %>% 
-      hc_xAxis(categories = month$day) %>% 
-      hc_add_series(month$value,showInLegend = FALSE) %>% 
-      hc_add_theme(sales_them_const)
-  }
-})
-
-output$sales_prophweek = renderHighchart({
   sales_them_const <<- sales_themout()
-  week = sales_prophet_reac()$week
-  if (input$sales_proph_week == 'Multiplicative'){
-    highchart()  %>% 
-      hc_title(text = "Weekly Seasonality") %>% 
-      hc_xAxis(categories = week$day) %>% 
+  month <- sales_prophet_reac()$month
+  
+  hc <- highchart() %>% 
+    hc_title(text = "Monthly Seasonality")  %>% 
+    hc_xAxis(categories = month$day)
+  
+  if (input$sales_proph_month == "Multiplicative") {
+    hc %>% 
       hc_yAxis(labels = list(format = "{value}%")) %>% 
-      hc_add_series(100*week$value,showInLegend = FALSE)  %>% 
+      hc_add_series(
+        data = 100 * month$value,
+        showInLegend = FALSE
+      ) %>% 
       hc_add_theme(sales_them_const)
-  } else {
-    highchart()  %>% 
-      hc_title(text = "Weekly Seasonality") %>% 
-      hc_xAxis(categories = week$day) %>% 
-      hc_add_series(week$value,showInLegend = FALSE)  %>% 
+  } else if (input$sales_proph_month == "Additive") {
+    hc %>% 
+      hc_add_series(
+        data = month$value,
+        showInLegend = FALSE
+      ) %>% 
       hc_add_theme(sales_them_const)
   }
 })
 
+# Weekly seasonality component plot from Prophet
+output$sales_prophweek = renderHighchart({
+  # Do nothing when weekly seasonality is "None"
+  req(input$sales_proph_week != "None")
+  
+  sales_them_const <<- sales_themout()
+  week <- sales_prophet_reac()$week
+  
+  hc <- highchart()  %>% 
+    hc_title(text = "Weekly Seasonality") %>% 
+    hc_xAxis(categories = week$day)
+  
+  if (input$sales_proph_week == "Multiplicative") {
+    hc %>% 
+      hc_yAxis(labels = list(format = "{value}%")) %>% 
+      hc_add_series(
+        data = 100 * week$value,
+        showInLegend = FALSE
+      )  %>% 
+      hc_add_theme(sales_them_const)
+  } else if (input$sales_proph_week == "Additive") {
+    hc %>% 
+      hc_add_series(
+        data = week$value,
+        showInLegend = FALSE
+      ) %>% 
+      hc_add_theme(sales_them_const)
+  }
+})
 
+# LaTeX formula for the Prophet additive and multiplicative components
 output$sales_prophformula <- renderUI({ 
   y = ''
   
@@ -199,6 +245,7 @@ output$sales_prophformula <- renderUI({
   withMathJax(text)
 })
 
+# Error value box for the chosen Prophet configuration
 output$sales_prophresults <- renderValueBox({
   pred = sales_db()
   pred$pred = sales_prophet_reac()$trend$yhat
@@ -214,12 +261,14 @@ output$sales_prophresults <- renderValueBox({
   )
 })
 
+# UI for choosing which seasonality is used as color in the error plot
 output$sales_proph_col_ui = renderUI({
   vec = c('Weekly','Monthly','Yearly')
   vec = vec[!vec%in%input$sales_proph_fix]
   selectInput('sales_proph_col','Color By',choices = vec,selected = vec[1])
 })
 
+# Reactive data frame of Prophet grid results filtered by user constraints
 sales_dt_reac = reactive({
   vec = c('Yearly','Monthly','Weekly')
   sales_x <- vec[!vec%in%c(input$sales_proph_fix,input$sales_proph_col)]
@@ -238,6 +287,7 @@ sales_dt_reac = reactive({
   return(dt)
 })
 
+# Highcharter column chart of model errors across Prophet seasonal configurations
 output$sales_proph_dt = renderHighchart({
   dt_reac <<- sales_dt_reac()
   sales_them_const <<- sales_themout()
@@ -251,16 +301,3 @@ output$sales_proph_dt = renderHighchart({
     hc_yAxis(title = list(text = sales_text_reac())) %>% 
     hc_add_theme(sales_them_const)
 })
-
-
-# output$sales_arimadiff = renderHighchart({
-#   db = sales_db()
-#   sales_them_const <<- sales_themout()
-#   
-#   db_diff = data.frame(date = db$date[-1],sales = diff(db$sales))
-#   highchart(type = "stock") %>% 
-#     hc_add_series(xts::xts(db_diff$sales, order.by=as.Date(db_diff$date)), 
-#                   id = "sales",name = 'Sales')%>% 
-#     hc_chart(polar = FALSE)  %>% 
-#     hc_add_theme(sales_them_const)
-# })

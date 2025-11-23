@@ -3,16 +3,13 @@ source('ui_scripts/ui_aboutme.R',local = TRUE)
 source('ui_scripts/ui_contents.R',local = TRUE)
 source("ui_scripts/ui_regression.R",local=TRUE)
 source("ui_scripts/ui_clustering.R",local=TRUE)
-source("ui_scripts/ui_classification.R",local=TRUE)
 source("ui_scripts/ui_nlp.R",local=TRUE)
-source("ui_scripts/ui_prob.R",local=TRUE)
-source("ui_scripts/ui_mc.R",local=TRUE)
 source("ui_scripts/ui_timeseries.R",local=TRUE)
+source("ui_scripts/ui_prob.R",local=TRUE)
 source("ui_scripts/ui_optim.R",local = TRUE)
-source("ui_scripts/ui_graph.R",local=TRUE)
-source("ui_scripts/ui_markov.R",local=TRUE)
 source("ui_scripts/ui_ode.R",local=TRUE)
-
+source("ui_scripts/ui_mc.R",local=TRUE)
+source("ui_scripts/ui_markov.R",local=TRUE)
 
 ui <- dashboardPage(
   header = dashboardHeader(
@@ -20,7 +17,6 @@ ui <- dashboardPage(
       tags$span(class = "logo-mini", "KH"),
       tags$span(class = "logo-lg", "Kevin Hua")
     )
-    # no enable_rightsidebar argument in v2
   ),
   sidebar = dashboardSidebar(
     sidebarMenu(
@@ -57,7 +53,6 @@ ui <- dashboardPage(
       tab_contents,
       tab_clust,
       tab_reg,
-      tab_classif,
       tab_hotel,
       tab_timeseries,
       tab_prob,

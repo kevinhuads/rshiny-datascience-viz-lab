@@ -18,7 +18,7 @@ tab_markov = tabItem(
                 dataTableOutput("markov_table")),
         p('The plot on the right show the distribution of lengths for the words in our target languages. 
           We can see for example that generally, german words are longer than english words')),
-      column(7,highchartOutput("ma_length"))),
+      column(7,withSpinner(highchartOutput("ma_length")))),
     column(12, br(),
            column(6,
                   column(4,selectInput("ma_occurlang",label = "Language",
@@ -28,7 +28,7 @@ tab_markov = tabItem(
                                        selected = "pie")),
                   column(4,selectInput("ma_occurcol",label = "Color Palette",
                                        choices = palettes,selected = "Blues")),
-                  highchartOutput("ma_occur")),
+                  withSpinner(highchartOutput("ma_occur"))),
            column(6,
                   br(),
                   p("Even though the languages that we study here are all European languages with a lot of similarities, each of them are different and have their rules on their own."),

@@ -1,9 +1,11 @@
 Data_Prep/
 Application/Saved
+Application/www
 Performance/
 temp/
 utils/
 Application/deploy.R
+.Renviron
 
 # History files
 .Rhistory
@@ -12,13 +14,14 @@ Application/deploy.R
 # Session data
 .RData
 .Ruserdata
+.RDataTmp
 
 # RStudio project files
 .Rproj.user/
-*.Rproj
 
 # renv cache (optional, can be large)
 renv/library/
+renv/staging/
 
 # Packrat (if ever used)
 packrat/

@@ -1,5 +1,6 @@
-#https://www.datacamp.com/community/tutorials/ML-NLP-lyric-analysis
+# NLP section - server outputs and reactives
 
+# Interactive data table for hotel reviews
 output$hotel_table = renderDataTable({
   datatable(hotel_df, extensions = 'Scroller', options = list(
     deferRender = TRUE,
@@ -11,8 +12,9 @@ output$hotel_table = renderDataTable({
   rownames = FALSE)
 })
 
+# Leaflet map of hotels with clustered markers
 output$hotel_map <- renderLeaflet({
-
+  
   leaflet(data = hotel_byhot) %>%
     addProviderTiles("Esri.WorldStreetMap", group = "World Street Map") %>%
     addProviderTiles("CartoDB.Positron",    group = "Light") %>%
@@ -28,12 +30,13 @@ output$hotel_map <- renderLeaflet({
     )
 })
 
-
+# Reactive selection of sentiment time series (overall or country specific)
 hotel_yVar <- reactive({
   if(is.null(input$hotel_sentcountry)) return('Overall')
   input$hotel_sentcountry
 })
 
+# Reactive data frame for sentiment time series with mean and quantile bands
 hotel_ggvisdf <- reactive({
   gdf <- hotel_sent[, c('date', hotel_yVar())]
   names(gdf) <- c("x", "y")
@@ -55,8 +58,10 @@ hotel_ggvisdf <- reactive({
   gdf
 })  
 
+# Reactive colour palette for sentiment points
 hotel_pal <- reactive({colorNumeric('Spectral', hotel_sent$overall)(hotel_sent[,hotel_yVar()])})
 
+# Tooltip content for sentiment time series points
 hotel_all_values <- function(x) {
   if(as.Date(as.POSIXct(x[,1]/1000, origin="1970-01-01"))== "1970-01-01"){
     return(NULL)
@@ -66,6 +71,7 @@ hotel_all_values <- function(x) {
   }
 }
 
+# ggvis pipeline for interactive sentiment time series
 hotel_ggvisdf %>%
   ggvis(~x, ~y) %>%
   set_options(width = "auto", resizable=FALSE) %>%    
@@ -80,8 +86,7 @@ hotel_ggvisdf %>%
                 opacity := 0.4,se = TRUE,fill:= "dodgerblue3", strokeWidth := 5)%>% 
   bind_shiny("hotel_sentvis", "hotel_ggsent")
 
-
-
+# Conditional UI to switch between wordcloud and frequency bar chart
 output$hotel_wordbar = renderUI({
   if(input$hotel_wordbar_choose == 'Wordcloud'){
     plotOutput('hotel_wordc',height = '400px')
@@ -90,7 +95,7 @@ output$hotel_wordbar = renderUI({
   }
 })
 
-
+# Wordcloud of most frequent terms in positive or negative reviews
 output$hotel_wordc = renderPlot({
   if(input$hotel_negpos == 'Positive') col_hot = 'Blues' else col_hot = 'Reds'
   
@@ -101,16 +106,18 @@ output$hotel_wordc = renderPlot({
   par(mar = rep(0, 4))
   wordcloud(words = d$word, freq = d$freq, min.freq = 3, scale = (1/as.numeric(input$hotel_wc_ngram))^0.3*c(4,0.6),
             max.words=400/as.numeric(input$hotel_wc_ngram), random.order=FALSE, 
-            colors=brewer.pal(9, col_hot)[4:9])
+            colors=brewer.pal(9, col_hot)[4:9]) %>%
+    suppressWarnings()
 })
 
+# Highcharter bar chart of word frequencies in positive or negative reviews
 output$hotel_wordfreq = renderHighchart({
   hotel_negpos <- input$hotel_negpos
   hotel_wc_gram <- input$hotel_wc_ngram
-
+  
   if(hotel_negpos == 'Positive') col_hot <- rgb(61/255,89/255,171/255,0.7) else col_hot <<- rgb(238/255,59/255,59/255,0.4)
   #if(input$hotel_negpos == 'Positive') col_hot2 = 'blue' else col_hot2 = 'red'
-
+  
   d <- data.frame(sort(hotel_tdm[[hotel_negpos]][[hotel_wc_gram]],decreasing = TRUE))
   colnames(d) = 'Count'
   d$Word = factor(rownames(d),levels = rev(rownames(d)))
@@ -120,7 +127,7 @@ output$hotel_wordfreq = renderHighchart({
   number_ = 0
   if (max(d$Frequency) < 0.1) number_ = 1
   if (max(d$Frequency) < 0.01) number_ = 2
-
+  
   hchart(d, "bar", hcaes(x = Word, label=Word,y = Frequency), color = col_hot) %>% 
     hc_xAxis(title = list(text = '')) %>% 
     hc_yAxis(title = list(text = 'Frequency'),
@@ -132,9 +139,10 @@ output$hotel_wordfreq = renderHighchart({
 }")) 
 })
 
+# Column chart summarising average sentiment metrics by rating range
 output$hotel_rangescore = renderHighchart({
   i = 1
-
+  
   df = hotel_range[[i]][[as.character(input$hotel_rangebreak)]]
   
   vec = c('Average Positive Words' = 'Num_Pos',
@@ -159,7 +167,7 @@ output$hotel_rangescore = renderHighchart({
       temp = str_extract(x,"\\d+\\.\\d+")
       ifelse(is.na(temp), str_extract(x,"\\d+"),temp) %>%
         as.numeric()
-      }) %>%
+    }) %>%
     t()
   
   round_ = ifelse(input$hotel_rangedisp == "Num_Reviews",0,4)
@@ -170,12 +178,13 @@ output$hotel_rangescore = renderHighchart({
     hc_add_series(df, showInLegend = FALSE) %>%
     hc_tooltip(formatter = JS(paste0("function () {
                               return '<b>Notes from ' + this.point.from + ' to ' + this.point.to + ' (included)</b><br/>' +'",
-                              names(vec)[vec == input$hotel_rangedisp]," : ' + Highcharts.numberFormat(Math.abs(this.point.y), ",round_,");
+                                     names(vec)[vec == input$hotel_rangedisp]," : ' + Highcharts.numberFormat(Math.abs(this.point.y), ",round_,");
 }")))
   
-
+  
 })
 
+# Word co-occurrence graph for chosen pair statistics and layout
 output$hotel_graph <- renderHighchart({
   df <- hotel_pairs[[input$hotel_graphchoice]][1:input$hotel_graphlength, ]
   
@@ -185,7 +194,7 @@ output$hotel_graph <- renderHighchart({
     dplyr::summarise(n = sum(n), .groups = "drop")
   
   g <- graph_from_data_frame(
-    df[, c("word1", "word2", "n", "Topic")],
+    df[, c("word1", "word2", "n")],
     vertices = vert,
     directed = TRUE
   )
@@ -203,8 +212,7 @@ output$hotel_graph <- renderHighchart({
     hc_boost(enabled = FALSE)
 })
 
-
-
+# UI controls for LDA word display (table, wordcloud, or graph)
 output$hotel_ldawordshow = renderUI({
   if(input$hotel_ldadisp == 'Table'){
     sliderInput('hotel_ldashow',label = 'Number of Words',min = 15, max = 35, step =5, value = 15)
@@ -213,12 +221,12 @@ output$hotel_ldawordshow = renderUI({
       column(12, style='padding:0px;',
              selectInput('hotel_graphlayout_lda',label = 'Layout', selected = 'fr',choices = hotel_layouts_labels),
              radioButtons("hotel_graphlength_lda",label = "Number of words to show",c(250,500,1000),selected = 250,inline = TRUE)
-             )
+      )
     }
   }
 })
 
-
+# LDA topic graph based on word co-occurrences and topic assignments
 output$hotel_ldagraph = renderHighchart({
   df = hotel_pairs[[input$hotel_ldachoice]]
   
@@ -227,10 +235,10 @@ output$hotel_ldagraph = renderHighchart({
     df_temp = hotel_lda[[input$hotel_ldachoice]][[k]]
     terms_lda = df_temp[df_temp$topic == i,]
     temp = as.numeric(df$word1%in%terms_lda$term & 
-                      df$word2%in%terms_lda$term)
+                        df$word2%in%terms_lda$term)
     
     temp[temp == 1] = terms_lda$beta[match(df$word1[temp == 1],terms_lda$term)] +
-                      terms_lda$beta[match(df$word2[temp == 1],terms_lda$term)]
+      terms_lda$beta[match(df$word2[temp == 1],terms_lda$term)]
     return(temp)
   })
   df$Topic = as.factor(apply(pairs_temp,1,which.max))
@@ -262,6 +270,7 @@ output$hotel_ldagraph = renderHighchart({
   hchart(y, layout = hotel_layouts[[input$hotel_graphlayout_lda]])%>% hc_boost(enabled = FALSE)
 })
 
+# Conditional UI for LDA visualisation output type
 output$hotel_ldachart = renderUI({
   if(input$hotel_ldadisp == 'Table'){
     plotOutput('hotel_ldawords',height = '500px')
@@ -275,7 +284,7 @@ output$hotel_ldachart = renderUI({
   }
 })
 
-
+# Plot of top LDA terms per topic using label repulsion
 output$hotel_ldawords = renderPlot({
   s = 100/input$hotel_ldashow
   if (input$hotel_ldashow==5)  s = 8
@@ -303,11 +312,12 @@ output$hotel_ldawords = renderPlot({
           strip.text.x = element_text(size = 9)) +
     labs(x = NULL, y = NULL, title = paste("LDA Top Terms for", input$hotel_ldak, "Topics")) +
     coord_flip()
-  })
+})
 
+# LDA comparison wordcloud showing topic specific term weights
 output$hotel_ldacloud = renderPlot({
   top_term_wide = reshape2::dcast(hotel_lda[[input$hotel_ldachoice]][[input$hotel_ldak-1]], 
-                        term ~ topic, value.var="beta")
+                                  term ~ topic, value.var="beta")
   rownames(top_term_wide) = top_term_wide$term
   top_term_wide$term = NULL
   colnames(top_term_wide) = paste0('Topic',colnames(top_term_wide))

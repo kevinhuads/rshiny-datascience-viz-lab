@@ -64,8 +64,6 @@ tab_timeseries = tabItem(tabName = "timeseries",
                                           For each case, we will compute error (chosen before) to see how far are our predictions from the reality.')),
                                  column(12,
                                         column(4,
-                                               
-                                               
                                                box(title = 'Inputs',status = "primary",
                                                    radioButtons('sales_proph_week','Weekly Seasonality', inline = TRUE,
                                                                 choices = c('None','Additive','Multiplicative'),selected = 'Additive'),
@@ -110,35 +108,4 @@ tab_timeseries = tabItem(tabName = "timeseries",
                                                )),
                                  
                                  width = 12)
-                             # box(subtitle_('ARIMA'),
-                             #     column(12,p('ARIMA stands for AutoRegression Integrated Moving Average and requieres much more knowledge about time series than Prophet.
-                             #                 Basically, an ARIMA model for our timeseries Y would have three adjustable parameters (p,d,q):'),
-                             #            tags$ul(
-                             #              tags$li("A ",strong("Auto Regressive")," of order p ",em("(AR(p))"),"series ", em("Y"),
-                             #                      "uses the past values in the regression equation until a maximum of p lags 
-                             #                      $$y_{t} = c + \\sum_{k=1}^{p}\\phi_k*y_{t-k} + \\epsilon_{t}$$
-                             #                      Where \\(\\epsilon_{t}\\) is a white noise and the \\(\\phi_k\\) are adjustable parameters"), 
-                             #              tags$li("The",strong("Integrated")," of order d",em("(I(d))"),"part refers to the degree of differencing involved.
-                             #                      Basically, if we note the ",em('Backshift Notation'), "with the Backward Shift Operator $B$ such as $B*y_{t} = y_{t-1}$ , 
-                             #                      the differentiated series of order 1 of the series \\(Y\\) would be the series \\(Y'\\)  such as \\(y_{t}' = y_{t} - y_{t-1} = (1-B) y_{t}\\).
-                             #                      The differentiated series of order d would then be:
-                             #                      $$y_{t}' = (1-B)^d y_{t}$$"), 
-                             #              tags$li("A",strong("Moving Average")," of order q ",em("(MA(q))")," uses past forecast errors 
-                             #                      in a regression model with a maximum number of q terms:
-                             #                      $$y_{t} = c + \\epsilon_{t} + \\sum_{k=1}^{q}\\theta_{k}*\\epsilon_{t-k}$$
-                             #                      Where \\(\\epsilon_{t}\\) is a white noise and the \\(\\theta_k\\) are adjustable parameters")
-                             #            ),
-                             #            p("Finally, an ARIMA(p,d,q) can be written as:
-                             #              $$y_{t}' = c + \\epsilon_{t}+ \\sum_{k=1}^{p}\\phi_k*y_{t-k}' + \\sum_{k=1}^{q}\\theta_{k}*\\epsilon_{t-k} $$
-                             #              With \\(y_{t}'\\) being the differencied series d times of the \\(y_{t}\\)"),
-                             #            p('To be continued...')),
-                                 # column(12,
-                                 #        column(3,
-                                 #               p('')
-                                 #               ),
-                                 #        column(9,
-                                 #               column(12,withSpinner(highchartOutput('sales_arimadiff')))
-                                 #        )),
-                                 # width = 12)
-                             
                            )))

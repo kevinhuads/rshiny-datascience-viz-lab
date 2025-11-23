@@ -1,8 +1,12 @@
+# Optimisation section - random, greedy and simulated annealing TSP
+
+# Randomly select one of the precomputed city configurations
 optim_randn = reactive({
   input$optim_gencities
   return(sample(1:optim_set,1))
 })
 
+# Retrieve the current set of cities for the selected configuration
 optim_v = reactive({
   nv= input$optim_nv
   optim_dist = 100
@@ -10,6 +14,7 @@ optim_v = reactive({
   return(villes)
 })
 
+# Plot the initial cities inside the bounding square
 output$optim_cities <- renderPlotly({
   v_ini = optim_v()
   
@@ -25,8 +30,10 @@ output$optim_cities <- renderPlotly({
     config(displayModeBar = FALSE)
 })
 
+# Reactive values controlling animation of random route construction
 optim_rvrand <- reactiveValues(j = 0, launch = FALSE)
 
+# Increment animation step for random route while launch flag is TRUE
 observe({
   isolate({optim_rvrand$j = optim_rvrand$j+1})
   if ((optim_rvrand$j < as.numeric(input$optim_nv) +1)&optim_rvrand$launch){
@@ -34,21 +41,25 @@ observe({
   }
 })
 
+# Reset random route animation when the city set changes
 observeEvent(optim_v(),{
   optim_rvrand$j = 0
   optim_rvrand$launch = FALSE
 })
 
+# Start random route animation when button is pressed
 observeEvent(input$optim_genrand,{
   optim_rvrand$j = 0
   optim_rvrand$launch = TRUE
 })
 
+# Generate one random TSP solution (used as a route template)
 sol_rand=reactive({
   input$optim_genrand
   c(1,1+sample(as.numeric(input$optim_nv)-1),1)
 })
 
+# Animate construction of a random TSP route and display its distance
 output$optim_random <- renderPlotly({
   v_ini = optim_v()
   
@@ -70,12 +81,14 @@ output$optim_random <- renderPlotly({
     config(displayModeBar = FALSE)
 })
 
+# Text summary of the distribution of random route distances
 output$optim_randmean <- renderText({ 
   x = optim_rands[[paste0('cities',input$optim_nv)]][,optim_randn()]
   paste0('If we generate 50 000 random solutions, we get the following distribution for the distance travelled.
   It follows a normal distribution with an average of ',round(mean(x)),' km with a standar deviation of ',round(sd(x)),' km.')
 })
 
+# Histogram and density of distances over many random routes
 output$optim_distrand <- renderPlotly({
   df = optim_rands[[paste0('cities',input$optim_nv)]]
   colnames(df)[optim_randn()] = 'Distance'
@@ -90,9 +103,10 @@ output$optim_distrand <- renderPlotly({
 
 
 
-
+# Reactive values controlling animation for the greedy algorithm
 optim_rvgreed <- reactiveValues(j = 0, launch = FALSE)
 
+# Increment animation step for greedy route while launch flag is TRUE
 observe({
   isolate({optim_rvgreed$j = optim_rvgreed$j+1})
   if ((optim_rvgreed$j < as.numeric(input$optim_nv) +1)&optim_rvgreed$launch){
@@ -100,16 +114,19 @@ observe({
   }
 })
 
+# Reset greedy animation when the city set changes
 observeEvent(optim_v(),{
   optim_rvgreed$j = 0
   optim_rvgreed$launch = FALSE
 })
 
+# Start greedy animation when button is pressed
 observeEvent(input$optim_lgreed,{
   optim_rvgreed$j = 0
   optim_rvgreed$launch = TRUE
 })
 
+# Compute greedy TSP route (nearest neighbour heuristic)
 optim_vgreed <- reactive({
   v_rest=optim_v()[,1:2]
   nv = nrow(v_rest)
@@ -127,6 +144,7 @@ optim_vgreed <- reactive({
   return(v_traj)
 })
 
+# Text comparing greedy route distance to average random route distance
 output$optim_greedtext <- renderText({ 
   dist_glout = calc_dist(optim_vgreed()[,1:2])
   x = mean(optim_rands[[paste0('cities',input$optim_nv)]][,optim_randn()])
@@ -134,6 +152,7 @@ output$optim_greedtext <- renderText({
          ' better than the average random solution.')
 })
 
+# Animate greedy route construction and show current distance
 output$optim_greedy <- renderPlotly({
   if (optim_rvgreed$j>1) dist_glout = calc_dist(optim_vgreed()[1:optim_rvgreed$j,1:2]) else dist_glout=0
   
@@ -152,6 +171,7 @@ output$optim_greedy <- renderPlotly({
     config(displayModeBar = FALSE)
 })
 
+# Reactive values driving the simulated annealing process
 optim_rv <- reactiveValues(T=optim_Tinit,
                            i=0,
                            traj = 0,
@@ -161,12 +181,14 @@ optim_rv <- reactiveValues(T=optim_Tinit,
                            J_opt = 0,
                            launch = FALSE)
 
+# Store best distances over iterations for error plot
 optim_err <- reactiveValues(distance = 0,iter = 0)
 
+# Plot current best simulated annealing route and its distance
 output$optim_anneal <- renderPlotly({
   villes = optim_v()
   nv = nrow(villes)
-
+  
   if (optim_rv$i == 0) villes_RC = villes else villes_RC = optim_rv$villes_RC
   
   villes_RC$names = paste0('City',rownames(villes_RC))
@@ -185,6 +207,7 @@ output$optim_anneal <- renderPlotly({
     config(displayModeBar = FALSE)
 })
 
+# Plot distance as a function of iterations and compare to greedy distance
 output$optim_annealerr <- renderPlotly({
   df = data.frame(Iteration = optim_err$iter,Distance = optim_err$distance)
   dist_glout = calc_dist(optim_vgreed()[,1:2])
@@ -205,13 +228,14 @@ output$optim_annealerr <- renderPlotly({
       font = list(color = 'rgba(0, 0, 152, .8)')
     ) %>%
     layout(shapes = list(
-          list(line = list(color = "rgba(212, 60, 60, .8)"),
-               x0 = 0, x1 = input$optim_iter+10, xref = "x",
-               y0 = dist_glout, y1 = dist_glout, yref = "y")),
-          xaxis = list(title = 'Iterations',range = c(0,input$optim_iter+10),zeroline = FALSE),
-          yaxis = list(title = 'Distance',range = c(0,optim_err$distance[1]+10),zeroline = FALSE))
+      list(line = list(color = "rgba(212, 60, 60, .8)"),
+           x0 = 0, x1 = input$optim_iter+10, xref = "x",
+           y0 = dist_glout, y1 = dist_glout, yref = "y")),
+      xaxis = list(title = 'Iterations',range = c(0,input$optim_iter+10),zeroline = FALSE),
+      yaxis = list(title = 'Distance',range = c(0,optim_err$distance[1]+10),zeroline = FALSE))
 })
 
+# Initialise simulated annealing state when cities are regenerated
 observeEvent(optim_v(),{
   optim_rv$launch <- FALSE
   optim_rv$T <- optim_Tinit
@@ -226,6 +250,7 @@ observeEvent(optim_v(),{
   optim_err$iter <- 0
 })
 
+# Reset and launch simulated annealing when button is pressed
 observeEvent(input$optim_genanneal,{
   optim_rv$T <- optim_Tinit
   optim_rv$i <- 0
@@ -240,6 +265,7 @@ observeEvent(input$optim_genanneal,{
   optim_err$iter <- 0
 })
 
+# Core simulated annealing loop, updating route, best distance and temperature
 observe({
   isolate({
     one_step = anneal_step(optim_rv$T,

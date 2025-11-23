@@ -1,3 +1,6 @@
+# Regression section - server outputs and reactives
+
+# Interactive data table for bike sharing dataset
 output$bikes_table = DT::renderDataTable({
   datatable(bikes, extensions = 'Scroller', options = list(
     deferRender = TRUE,
@@ -9,6 +12,7 @@ output$bikes_table = DT::renderDataTable({
   rownames = FALSE)
 })
 
+# Distribution of rental counts as histogram or density
 output$bikes_dist = renderHighchart({
   y = bikes$count
   if (input$bikes_histdist == 'Density') y= density(y)
@@ -18,7 +22,7 @@ output$bikes_dist = renderHighchart({
     hc_legend(enabled = F)
 })
 
-
+# Average rentals per hour, optionally in polar coordinates
 output$bikes_hour = renderHighchart({
   bikes_hour = as.data.frame(aggregate(bikes_ml$count,
                                        list(bikes_ml$hour),
@@ -37,8 +41,7 @@ output$bikes_hour = renderHighchart({
     hc_legend(enabled = F) # enable exporting option
 })
 
-
-
+# Dynamic feature selector for qualitative vs quantitative variables
 output$selectbikesUI = renderUI({
   if (input$bikes_rad == "quali"){
     choices_ = bikes_quali
@@ -52,10 +55,7 @@ output$selectbikesUI = renderUI({
               choices = choices_ ,selected = 1)
 })
 
-# hcboxplot(var = bikes$season, x = bikes$count,name = "Length") %>% 
-#   hc_chart(type = "column")  %>% 
-#   hc_colors(c("#203d7d","#a0a0ed","#203d7e","#a0a0ad")) 
-
+# Relationship between selected feature and rental count
 output$bikes_chosen = renderPlotly({
   shiny::validate(need(input$selectbikes,message = 'Loading...'))
   
@@ -70,10 +70,6 @@ output$bikes_chosen = renderPlotly({
       levels(bikes_temp[,input$selectbikes]) = c('Clear or Few Clouds','Mist and Cloudy','Light Snow or Light Rain') 
     }  
     
-    # custom_colors_with_alpha_in_hex<- c("#87CEFF80","#EE3B3B80","#B0306080","#79CDCD80")
-    # make_highchart_boxplot_with_colored_factors(value = bikes_temp$count, by=bikes_temp$season, chart_title = "",
-    #                                             chart_x_axis_label = "",show_outliers = FALSE, 
-    #                                             boxcolors = custom_colors_with_alpha_in_hex)
     plot_ly(bikes_temp, y = ~count, color = ~bikes_temp[,input$selectbikes], type = "box",showlegend = FALSE)  %>%
       layout(title = "",xaxis = list(title = ""))
     
@@ -107,13 +103,14 @@ output$bikes_chosen = renderPlotly({
   }
 })
 
+# Correlation matrix heatmap for main numeric features
 output$bikescor <- renderHighchart({
   colnames(bikes_corr$pearson)  = c("Hour","Temperature","Felt Like","Humidity","Wind Speed")
   rownames(bikes_corr$pearson)  = colnames(bikes_corr$pearson) 
-  #corrplot.mixed(bikes_corr$pearson,lower.col = 'black', upper = 'square',tl.cex = 0.9)
   hchart.cor(bikes_corr$pearson)
 })
 
+# Reactive regression tree fitted on selected features
 bikes_tree_reac <- reactive({
   bikes_temp = bikes_train
   for (i in bikes_quali) bikes_temp[,i] = as.factor(bikes_temp[,i])
@@ -122,6 +119,7 @@ bikes_tree_reac <- reactive({
                 maxdepth=as.numeric(input$bikes_treeslide))
 })
 
+# Plot of regression tree with custom heat tree styling
 output$bikestree <- renderPlot({
   shiny::validate(
     need(length(input$bikes_treefeatures)>1, message = "Choose at least 2 features")
@@ -129,6 +127,7 @@ output$bikestree <- renderPlot({
   heat.tree(bikes_tree_reac(),type=4,extra=101,varlen=0,faclen=0,fallen.leaves=TRUE,roundint=FALSE)
 })
 
+# Text summary of regression tree performance on validation set
 output$bikes_tree_val <- renderText({
   if (length(input$bikes_treefeatures)>1){
     paste("The current tree has an error reduction ratio of", 
@@ -138,11 +137,13 @@ output$bikes_tree_val <- renderText({
   
 })
 
+# Summary of selected GLM model
 output$bikes_glm_summary <- renderPrint({
   reg = bikes_lm[[input$bikes_lmchoice]]
   summary(reg)
 })
 
+# Error summary boxes for different model families
 output$bikes_lm_results <- err_box(bikes_lm_dev[input$bikes_lmchoice])
 output$bikes_knn_results <- err_box(max(bikes_err$knn$dev))
 output$bikes_tree_results <- err_box(max(bikes_err$tree$dev))
@@ -154,6 +155,7 @@ output$bikes_svm_results  <- err_box(max(sapply(c('nu','eps'),function(y) {
   })
 })))
 
+# Error reduction vs tree depth
 output$bikes_tree <- renderPlotly({
   plot_ly(data = as.data.frame(bikes_err$tree), x = ~depth , y = ~dev, 
           type = 'scatter',mode = 'lines + markers',marker = list(size = 10,line = list(width = 2))) %>%
@@ -162,6 +164,7 @@ output$bikes_tree <- renderPlotly({
            xaxis = list(title = 'Depth'))
 })
 
+# Error reduction vs K for KNN algorithms
 output$bikes_knn <- renderPlotly({
   plot_ly(data = as.data.frame(bikes_err$knn)[bikes_err$knn$k<16,], x = ~k , y = ~dev, 
           type = 'scatter',color = ~algorithm, mode = 'line') %>%
@@ -169,17 +172,24 @@ output$bikes_knn <- renderPlotly({
            xaxis = list(dtick = 1))
 })
 
+# Reactive SVM error grid for chosen type and kernel
 bikes_svm_df <- reactive({
   bikes_err$svm[[input$bikes_svm_type]][[input$bikes_svm_kernel]]
 })
 
+# UI for choosing SVM hyperparameter to display
 output$bikes_svm_ui <- renderUI({
   y = colnames(bikes_svm_df())
   y = y[-length(y)]
   selectInput("bikes_err_svm",label = 'Parameter',choices = y)
 })
 
+# Error reduction vs chosen SVM hyperparameter
 output$bikes_svm <- renderPlotly({
+  shiny::validate(
+    need(input$bikes_err_svm %in% colnames(bikes_svm_df()) ,message = FALSE),
+  )
+  
   choice = input$bikes_err_svm 
   new_df = aggregate(bikes_svm_df()$dev,by = list(bikes_svm_df()[[choice]]),FUN = max)
   
@@ -194,6 +204,7 @@ output$bikes_svm <- renderPlotly({
            xaxis = list(title = choice))
 })
 
+# Error reduction vs random forest hyperparameter
 output$bikes_rf <- renderPlotly({
   new_df = aggregate(bikes_err$rf$dev,by = list(bikes_err$rf[[input$bikes_err_rf]]),FUN = max)
   plot_ly(new_df, x = ~Group.1, y = ~x,type = 'scatter',mode = 'lines + markers',
@@ -203,6 +214,7 @@ output$bikes_rf <- renderPlotly({
            xaxis = list(title = input$bikes_err_rf))
 })
 
+# Error reduction vs gradient boosting hyperparameter
 output$bikes_gbm <- renderPlotly({
   new_df = aggregate(bikes_err$gbm$dev,by = list(bikes_err$gbm[[input$bikes_err_gbm]]),FUN = max)
   plot_ly(new_df, x = ~Group.1, y = ~x,type = 'scatter',mode = 'lines + markers',
@@ -212,16 +224,7 @@ output$bikes_gbm <- renderPlotly({
            xaxis = list(title = input$bikes_err_gbm))
 })
 
-# output$bikes_svmdf <- renderPlotly({
-#   plot_ly(bikes_df_svm,y = ~ kernel, x = ~performance, color = ~type, type = 'bar',
-#           colors = c(rgb(159, 255, 128, maxColorValue = 255),rgb(255, 217, 179, maxColorValue = 255)),
-#           marker = list(line = list(color = 'rgb(0,0,0)',width = 1.5))) %>%
-#     layout(margin = list(l = 120),
-#            xaxis = list(title = '',tickformat= ',.0%',hoverformat = '.2%'),
-#            yaxis = list(title = ''),
-#            legend = list(orientation = 'h'))
-# })
-
+# Heatmap of SVM performance across kernels and loss types
 output$bikes_svmdf <- renderDataTable({
   
   brks <- seq(0.75,0.8,length.out = 8)
@@ -229,12 +232,10 @@ output$bikes_svmdf <- renderDataTable({
   
   datatable(bikes_df_svm_wide, options = list(dom = 't')) %>% 
     formatStyle(names(bikes_df_svm_wide), backgroundColor = styleInterval(brks, clrs))%>% 
-    formatPercentage(column = 1:4,digits = 3)
+    formatPercentage(column = 1:2,digits = 3)
 })
 
-
-
-
+# Test set performance comparison across all models
 output$bikes_testset <- renderHighchart({
   df_temp = bikes_perf
   colnames(df_temp) = c("y","name")
@@ -255,7 +256,7 @@ output$bikes_testset <- renderHighchart({
                         formatter =  JS("function() {return  Highcharts.numberFormat(Math.abs(100*this.point.y), 2) + '%'; }"))))
 })
 
-
+# Variable importance from final GBM model
 output$bikes_varimp <- renderHighchart({
   df_temp = bikes_gbm_varimp
   colnames(df_temp) = c("name","y")
@@ -275,6 +276,7 @@ output$bikes_varimp <- renderHighchart({
                         formatter =  JS("function() {return  Highcharts.numberFormat(Math.abs(100*this.point.y), 2) + '%'; }"))))
 })
 
+# Single prediction value box using tuned GLM on user inputs
 output$bikes_predict <- renderValueBox({
   vec =  bikes_test[1,]
   vec$hour[1] = input$bikes_hourinp
