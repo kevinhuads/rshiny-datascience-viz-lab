@@ -2,7 +2,7 @@
 
 Interactive R Shiny application that illustrates core data science and applied mathematics topics through narrative explanations and interactive visualisations.
 
-The app is organised as an "interactive blog" and covers nine themes: clustering, regression, natural language processing, time series, probability and hypothesis testing, optimisation, epidemiology, Monte Carlo simulation and Markov chains. The emphasis is on intuition, visual storytelling and connections to real datasets.
+The app is organised as an "interactive blog" and covers various themes: clustering, regression, natural language processing, time series, probability and hypothesis testing, optimisation, epidemiology, Monte Carlo simulation and Markov chains. The emphasis is on intuition, visual storytelling, interactivity and connections to real datasets.
 
 ---
 
@@ -36,6 +36,10 @@ This project is an R Shiny application created as a data science portfolio and t
 - Classical datasets from Kaggle and the UCI Machine Learning Repository, together with simulated examples for probabilistic and stochastic concepts.
 
 The app is positioned as a complement to production grade, Python based projects that focus on MLOps and deep learning. Here the focus is on classical statistics, machine learning and applied mathematics, showcased through a mature R and Shiny ecosystem.
+
+> **Note on historical context and scope**  
+> Most of the code in this application was originally developed between 2018 and 2020, so some modelling choices and libraries reflect the state of practice at that time. My current work builds on more recent techniques and tooling. This project is intentionally kept as a visual, introductory lab that scratches the surface of many topics and focuses on intuition and storytelling rather than exhaustive, state-of-the-art implementations.
+
 
 ---
 
@@ -207,29 +211,15 @@ In this repository, the Shiny application code and its resources live under the 
 - R 4.x or newer.  
 - Recommended: RStudio for a smoother Shiny development experience.
 
-Install the main R packages used in the app (names to adapt to the actual implementation):
-
-```r
-install.packages(c(
-  "shiny",
-  "shinydashboard",
-  "tidyverse",
-  "DT",
-  "plotly",
-  "highcharter",
-  "prophet",
-  "deSolve",
-  "wordcloud2",
-  "igraph"
-))
-```
-
-If the project uses `renv`, restore from the lockfile instead:
+This project uses `renv` for dependency management.
+After cloning the repository, install renv once if needed, then run:
 
 ```r
 install.packages("renv")
 renv::restore()
 ```
+
+renv::restore() will install all required packages in a project-local library based on renv.lock, so no manual install.packages() calls are required for other dependencies.
 
 ### 2. Clone the repository
 
