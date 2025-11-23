@@ -97,7 +97,7 @@ tab_hotel = tabItem(
                           lot of redundent thems and sequence of words (small room, room small...),
                           we will try to overcome this problem in the next session.')
                         ),
-                 column(6,uiOutput('hotel_wordbar'))
+                 column(6,withSpinner(uiOutput('hotel_wordbar')))
                  
                         ),
           width = 12),
@@ -143,7 +143,7 @@ tab_hotel = tabItem(
                         radioButtons('hotel_ldachoice',label = 'LDA dictionnary', choices = c('Positive','Negative')),
                         numericInput('hotel_ldak',label = 'Number of Topics',min = 2, max = hotel_nlda+1 , step =1, value = 4),
                         radioButtons('hotel_ldadisp',label = 'Display', choices = c('Table','Wordcloud','Graph')),
-                        uiOutput('hotel_ldawordshow')
+                        withSpinner(uiOutput('hotel_ldawordshow'))
                  ),
                  column(10,uiOutput('hotel_ldachart'),align="center")
           ),

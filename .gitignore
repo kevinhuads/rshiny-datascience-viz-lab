@@ -1,6 +1,5 @@
 Data_Prep/Rawdata
 Data_Prep/vis
-Application/Saved
 Application/www
 Performance/
 temp/
@@ -16,6 +15,7 @@ Application/deploy.R
 .RData
 .Ruserdata
 .RDataTmp
+.Rprofile
 
 # RStudio project files
 .Rproj.user/
