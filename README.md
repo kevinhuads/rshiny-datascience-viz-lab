@@ -2,7 +2,8 @@
 
 Interactive R Shiny application that illustrates core data science and applied mathematics topics through narrative explanations and interactive visualisations.
 
-The app is organised as an "interactive blog" and covers various themes: clustering, regression, natural language processing, time series, probability and hypothesis testing, optimisation, epidemiology, Monte Carlo simulation and Markov chains. The emphasis is on intuition, visual storytelling, interactivity and connections to real datasets.
+The app is organised as an "interactive blog" and covers core machine learning themes such as clustering, regression, natural language processing and time series, as well as broader mathematical ideas including stochastic simulation, Monte Carlo methods, Markov chains and simple epidemiological models. 
+The emphasis is on intuition, visual storytelling, interactivity and connections to real datasets.
 
 ---
 
